@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Score Day</string>
+    <string name="title_activity_main">Score Day</string>
+    <string name="package_name">com.scoreday.app</string>
+    <string name="custom_url_scheme">com.scoreday.app</string>
+</resources>

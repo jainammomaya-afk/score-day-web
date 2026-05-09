@@ -1,0 +1,36 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.google.gms:google-services:4.4.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Redirect build dirs for subprojects inside node_modules to avoid file-lock issues on Windows
+subprojects { subproject ->
+    if (subproject.projectDir.toString().contains('node_modules')) {
+        subproject.buildDir = "${rootProject.buildDir}/${subproject.name}"
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
