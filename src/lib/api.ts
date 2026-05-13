@@ -21,7 +21,9 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
       ...(bodyStr ? { data: JSON.parse(bodyStr) } : {}),
     });
     if (response.status >= 400) {
-      const detail = response.data?.detail ?? response.status.toString();
+      const detail =
+        (typeof response.data === "object" && response.data?.detail) ||
+        (response.status >= 500 ? "Server error — please try again in a moment" : response.status.toString());
       throw new Error(detail);
     }
     if (response.status === 204) return undefined as T;
