@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import { getTemplates, saveTemplate, deleteTemplate } from "../lib/templates";
+import { getTemplates, saveTemplate, deleteTemplate, loadTemplates } from "../lib/templates";
 import type { Day, Task, Template } from "../lib/types";
 
 const CATEGORIES = ["Work", "Personal", "Health", "Learning", "Other"] as const;
@@ -39,6 +39,10 @@ function PlanView({ day, onChange }: { day: Day; onChange: () => void }) {
   const [templates, setTemplates] = useState<Template[]>(() => getTemplates());
   const [saving, setSaving] = useState(false);
   const [saveName, setSaveName] = useState("");
+
+  useEffect(() => {
+    loadTemplates().then(() => setTemplates(getTemplates()));
+  }, []);
 
   // inline edit state
   const [editingId, setEditingId] = useState<number | null>(null);

@@ -1,10 +1,35 @@
-const THRESHOLD_KEY = "daily-score-streak-threshold";
+import { Capacitor } from "@capacitor/core";
 
-export function getThreshold(): number {
-  const v = parseInt(localStorage.getItem(THRESHOLD_KEY) ?? "80", 10);
+const KEY = "daily-score-streak-threshold";
+const IS_NATIVE = Capacitor.isNativePlatform();
+
+let _threshold = 80;
+
+function clamp(v: number): number {
   return isNaN(v) ? 80 : Math.max(1, Math.min(100, v));
 }
 
+export async function loadSettings(): Promise<void> {
+  if (IS_NATIVE) {
+    const { Preferences } = await import("@capacitor/preferences");
+    const { value } = await Preferences.get({ key: KEY });
+    _threshold = clamp(parseInt(value ?? "80", 10));
+  } else {
+    _threshold = clamp(parseInt(localStorage.getItem(KEY) ?? "80", 10));
+  }
+}
+
+export function getThreshold(): number {
+  return _threshold;
+}
+
 export function setThreshold(v: number): void {
-  localStorage.setItem(THRESHOLD_KEY, String(v));
+  _threshold = v;
+  if (IS_NATIVE) {
+    import("@capacitor/preferences").then(({ Preferences }) => {
+      Preferences.set({ key: KEY, value: String(v) });
+    });
+  } else {
+    localStorage.setItem(KEY, String(v));
+  }
 }

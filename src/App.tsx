@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, auth, setOnUnauthorized } from "./lib/api";
 import { loadToken } from "./lib/token";
-import { getThreshold, setThreshold as saveThreshold } from "./lib/settings";
+import { getThreshold, setThreshold as saveThreshold, loadSettings } from "./lib/settings";
 import type { Day, Streak } from "./lib/types";
 import DayPage from "./pages/Day";
 import HistoryPage from "./pages/History";
@@ -26,6 +26,7 @@ export default function App() {
       setAuthed(false);
       setDay(null);
     });
+    loadSettings().then(() => setThreshold(getThreshold()));
   }, []);
 
   async function refresh() {
