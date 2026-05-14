@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, auth } from "./lib/api";
+import { api, auth, setOnUnauthorized } from "./lib/api";
 import { loadToken } from "./lib/token";
 import { getThreshold, setThreshold as saveThreshold } from "./lib/settings";
 import type { Day, Streak } from "./lib/types";
@@ -22,6 +22,10 @@ export default function App() {
 
   useEffect(() => {
     loadToken().then((t) => setAuthed(!!t));
+    setOnUnauthorized(() => {
+      setAuthed(false);
+      setDay(null);
+    });
   }, []);
 
   async function refresh() {

@@ -5,6 +5,21 @@ import { loadToken, saveToken, clearToken } from "./token";
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 const IS_NATIVE = Capacitor.isNativePlatform();
 
+let _onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(cb: () => void): void {
+  _onUnauthorized = cb;
+}
+
+async function handleUnauthorized(path: string, detail: string): Promise<never> {
+  // Auth endpoints returning 401 means bad credentials, not an expired session.
+  if (!path.startsWith("/auth/")) {
+    await clearToken();
+    _onUnauthorized?.();
+  }
+  throw new Error(detail);
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${BASE_URL}${path}`;
   const method = (init?.method ?? "GET").toUpperCase();
@@ -20,6 +35,10 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
       headers,
       ...(bodyStr ? { data: JSON.parse(bodyStr) } : {}),
     });
+    if (response.status === 401) {
+      const detail = (typeof response.data === "object" && response.data?.detail) || "Session expired — please sign in again";
+      return handleUnauthorized(path, detail);
+    }
     if (response.status >= 400) {
       const detail =
         (typeof response.data === "object" && response.data?.detail) ||
@@ -34,6 +53,14 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     headers,
     ...init,
   });
+  if (res.status === 401) {
+    let detail = "Session expired — please sign in again";
+    try {
+      const body = await res.json();
+      if (body?.detail) detail = body.detail;
+    } catch {}
+    return handleUnauthorized(path, detail);
+  }
   if (!res.ok) {
     let detail = res.statusText;
     try {
