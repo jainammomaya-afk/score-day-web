@@ -29,14 +29,22 @@ export default function App() {
   }, []);
 
   async function refresh() {
-    try {
-      const [d, s] = await Promise.all([api.today(), api.streak(threshold)]);
-      setDay(d);
-      setStreak(s);
+    const [dayResult, streakResult] = await Promise.allSettled([
+      api.today(),
+      api.streak(threshold),
+    ]);
+
+    if (dayResult.status === "fulfilled") {
+      setDay(dayResult.value);
       setError(null);
-    } catch (e) {
-      setError((e as Error).message);
+    } else {
+      setError((dayResult.reason as Error).message);
     }
+
+    if (streakResult.status === "fulfilled") {
+      setStreak(streakResult.value);
+    }
+    // streak failure is silent — stale value stays in the header
   }
 
   useEffect(() => {
