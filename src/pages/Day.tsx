@@ -135,9 +135,7 @@ function PlanView({ day, onChange }: { day: Day; onChange: () => void }) {
     setBusy(true);
     setErr(null);
     try {
-      for (const t of tpl.tasks) {
-        await api.addTask(day.id, t.title, t.weight, t.category);
-      }
+      await Promise.all(tpl.tasks.map((t) => api.addTask(day.id, t.title, t.weight, t.category)));
       onChange();
     } catch (e) {
       setErr((e as Error).message);
