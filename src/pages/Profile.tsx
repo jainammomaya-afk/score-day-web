@@ -7,6 +7,8 @@ export default function ProfilePage() {
   const [email, setEmail] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState("");
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsErr, setStatsErr] = useState<string | null>(null);
 
@@ -22,9 +24,17 @@ export default function ProfilePage() {
 
   async function saveName() {
     const trimmed = draftName.trim();
-    const updated = await api.updateMe({ username: trimmed || null });
-    setUsername(updated.username);
-    setEditingName(false);
+    setSaving(true);
+    setSaveErr(null);
+    try {
+      const updated = await api.updateMe({ username: trimmed || null });
+      setUsername(updated.username);
+      setEditingName(false);
+    } catch (e) {
+      setSaveErr((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   const displayName = username || "Scorer";
@@ -39,31 +49,37 @@ export default function ProfilePage() {
           </div>
           <div>
             {editingName ? (
-              <div className="flex items-center gap-2">
-                <input
-                  autoFocus
-                  value={draftName}
-                  onChange={(e) => setDraftName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveName();
-                    if (e.key === "Escape") setEditingName(false);
-                  }}
-                  className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 w-40"
-                  placeholder="Your name"
-                  maxLength={40}
-                />
-                <button
-                  onClick={saveName}
-                  className="text-xs px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setEditingName(false)}
-                  className="text-xs text-zinc-600 hover:text-zinc-400"
-                >
-                  Cancel
-                </button>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveName();
+                      if (e.key === "Escape") setEditingName(false);
+                    }}
+                    disabled={saving}
+                    className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 w-40 disabled:opacity-50"
+                    placeholder="Your name"
+                    maxLength={40}
+                  />
+                  <button
+                    onClick={saveName}
+                    disabled={saving}
+                    className="text-xs px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 disabled:opacity-50"
+                  >
+                    {saving ? "Saving…" : "Save"}
+                  </button>
+                  <button
+                    onClick={() => { setEditingName(false); setSaveErr(null); }}
+                    disabled={saving}
+                    className="text-xs text-zinc-600 hover:text-zinc-400 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {saveErr && <div className="text-xs text-red-400">{saveErr}</div>}
               </div>
             ) : (
               <div className="flex items-center gap-2">
