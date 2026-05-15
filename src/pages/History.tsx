@@ -45,10 +45,14 @@ function CategoryBadge({ cat }: { cat: string | null }) {
   );
 }
 
+const RANGE_OPTIONS = [30, 90, 365] as const;
+type Range = typeof RANGE_OPTIONS[number];
+
 export default function HistoryPage({ threshold, onThresholdChange, onGoToToday }: Props) {
   const [rows, setRows] = useState<HistoryEntry[]>([]);
   const [categories, setCategories] = useState<CategoryStat[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  const [range, setRange] = useState<Range>(30);
   const [localThreshold, setLocalThreshold] = useState(threshold);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -57,9 +61,11 @@ export default function HistoryPage({ threshold, onThresholdChange, onGoToToday 
   const [detailErr, setDetailErr] = useState<string | null>(null);
 
   useEffect(() => {
-    api.history(30).then(setRows).catch((e) => setErr((e as Error).message));
-    api.categoryStats(30).then(setCategories).catch(() => {});
-  }, []);
+    setSelectedDate(null);
+    setDayDetail(null);
+    api.history(range).then(setRows).catch((e) => setErr((e as Error).message));
+    api.categoryStats(range).then(setCategories).catch(() => {});
+  }, [range]);
 
   async function handleSelectDate(date: string) {
     if (selectedDate === date) {
@@ -122,7 +128,24 @@ export default function HistoryPage({ threshold, onThresholdChange, onGoToToday 
   return (
     <div className="space-y-8">
       <div>
-        <div className="text-sm text-zinc-500">Last 30 days</div>
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-sm text-zinc-500">Last {range} days</div>
+          <div className="flex gap-1">
+            {RANGE_OPTIONS.map((r) => (
+              <button
+                key={r}
+                onClick={() => setRange(r)}
+                className={`px-2.5 py-1 rounded text-xs transition ${
+                  range === r
+                    ? "bg-zinc-700 text-zinc-100"
+                    : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
+                }`}
+              >
+                {r}d
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mt-1 flex items-baseline gap-4">
           <div className="text-3xl font-semibold tabular-nums">
             {monthAvg.toFixed(1)}<span className="text-zinc-500 text-lg">% avg</span>
@@ -183,6 +206,7 @@ export default function HistoryPage({ threshold, onThresholdChange, onGoToToday 
         <>
           <Heatmap
             rows={rows}
+            range={range}
             threshold={threshold}
             selectedDate={selectedDate}
             onSelect={handleSelectDate}
@@ -243,7 +267,7 @@ export default function HistoryPage({ threshold, onThresholdChange, onGoToToday 
       {categories.length > 0 && (
         <section>
           <div className="text-xs uppercase tracking-wider text-zinc-500 mb-3">
-            Category breakdown · last 30 days
+            Category breakdown · last {range} days
           </div>
           <div className="space-y-3">
             {categories.map((c) => {
@@ -367,11 +391,13 @@ function TaskRow({ task }: { task: Task }) {
 
 function Heatmap({
   rows,
+  range,
   threshold,
   selectedDate,
   onSelect,
 }: {
   rows: HistoryEntry[];
+  range: number;
   threshold: number;
   selectedDate: string | null;
   onSelect: (date: string) => void;
@@ -380,7 +406,7 @@ function Heatmap({
   return (
     <div>
       <div className="text-xs uppercase tracking-wider text-zinc-500 mb-2">
-        30-day heatmap · <span className="normal-case text-zinc-600">click a day to see details</span>
+        {range}-day heatmap · <span className="normal-case text-zinc-600">click a day to see details</span>
       </div>
       <div className="flex flex-wrap gap-1">
         {rows.map((r) => {
