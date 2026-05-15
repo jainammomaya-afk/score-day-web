@@ -100,12 +100,12 @@ export default function HistoryPage({ threshold, onThresholdChange, onGoToToday 
         rolling: Number(avg.toFixed(1)),
       };
     });
-    const last30 = locked.slice(-30);
-    const prev30 = locked.slice(-60, -30);
+    const lastN = locked.slice(-range);
+    const prevN = locked.slice(-range * 2, -range);
     const avg = (a: HistoryEntry[]) =>
       a.length ? a.reduce((s, x) => s + toPct(x), 0) / a.length : 0;
-    const m = avg(last30);
-    const p = avg(prev30);
+    const m = avg(lastN);
+    const p = avg(prevN);
 
     const lockedWithScore = locked.filter((r) => r.total > 0);
     const best = lockedWithScore.length
@@ -116,7 +116,7 @@ export default function HistoryPage({ threshold, onThresholdChange, onGoToToday 
       : null;
 
     return { chartData: data, monthAvg: m, prevMonthAvg: p, delta: m - p, bestDay: best, worstDay: worst };
-  }, [rows]);
+  }, [rows, range]);
 
   function commitThreshold() {
     const clamped = Math.max(1, Math.min(100, localThreshold || 1));
@@ -157,7 +157,7 @@ export default function HistoryPage({ threshold, onThresholdChange, onGoToToday 
                 (delta > 0 ? "text-emerald-400" : delta < 0 ? "text-red-400" : "text-zinc-400")
               }
             >
-              {delta > 0 ? "▲" : delta < 0 ? "▼" : "·"} {Math.abs(delta).toFixed(1)}pp vs prior 30
+              {delta > 0 ? "▲" : delta < 0 ? "▼" : "·"} {Math.abs(delta).toFixed(1)}pp vs prior {range}d
             </div>
           )}
         </div>
