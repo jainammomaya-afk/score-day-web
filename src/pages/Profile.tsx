@@ -2,39 +2,32 @@ import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import type { Stats } from "../lib/types";
 
-const NAME_KEY = "score-day-username";
-
-function getUsername(): string {
-  return localStorage.getItem(NAME_KEY) || "";
-}
-function saveUsername(n: string) {
-  localStorage.setItem(NAME_KEY, n.trim());
-}
-
 export default function ProfilePage() {
-  const [name, setName] = useState(getUsername);
+  const [username, setUsername] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsErr, setStatsErr] = useState<string | null>(null);
 
   useEffect(() => {
+    api.me().then((u) => { setUsername(u.username); setEmail(u.email); }).catch(() => {});
     api.stats().then(setStats).catch((e) => setStatsErr((e as Error).message));
   }, []);
 
   function startEditName() {
-    setDraftName(name);
+    setDraftName(username ?? "");
     setEditingName(true);
   }
 
-  function saveName() {
+  async function saveName() {
     const trimmed = draftName.trim();
-    setName(trimmed);
-    saveUsername(trimmed);
+    const updated = await api.updateMe({ username: trimmed || null });
+    setUsername(updated.username);
     setEditingName(false);
   }
 
-  const displayName = name || "Scorer";
+  const displayName = username || "Scorer";
 
   return (
     <div className="space-y-8 max-w-md">
@@ -83,7 +76,7 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
-            <div className="text-xs text-zinc-600 mt-0.5">Score Day user</div>
+            {email && <div className="text-xs text-zinc-600 mt-0.5">{email}</div>}
           </div>
         </div>
       </section>
@@ -108,7 +101,7 @@ export default function ProfilePage() {
         <div className="text-xs uppercase tracking-wider text-zinc-500 mb-3">About</div>
         <div className="space-y-1 text-sm text-zinc-500">
           <p>Score Day — rate your productivity, one day at a time.</p>
-          <p className="text-zinc-700 text-xs mt-2">v0.1 · local build</p>
+          <p className="text-zinc-700 text-xs mt-2">v2.0.0</p>
         </div>
       </section>
     </div>

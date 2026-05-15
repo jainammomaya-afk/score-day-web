@@ -1,5 +1,5 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
-import type { CategoryStat, Day, HistoryEntry, Stats, Streak, Task } from "./types";
+import type { CategoryStat, Day, HistoryEntry, Stats, Streak, Task, UserProfile } from "./types";
 import { loadToken, saveToken, clearToken } from "./token";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
@@ -78,8 +78,8 @@ async function authReq(path: string, body: object): Promise<{ token: string }> {
 }
 
 export const auth = {
-  register: async (email: string, password: string) => {
-    const { token } = await authReq("/auth/register", { email, password });
+  register: async (email: string, password: string, username?: string) => {
+    const { token } = await authReq("/auth/register", { email, password, username });
     await saveToken(token);
   },
   login: async (email: string, password: string) => {
@@ -117,4 +117,7 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ note }),
     }),
+  me: () => req<UserProfile>("/api/me"),
+  updateMe: (patch: { username: string | null }) =>
+    req<UserProfile>("/api/me", { method: "PATCH", body: JSON.stringify(patch) }),
 };

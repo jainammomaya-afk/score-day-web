@@ -54,3 +54,8 @@ export interface Stats {
   avg_7d: number;
   avg_30d: number;
 }
+
+export interface UserProfile {
+  email: string;
+  username: string | null;
+}

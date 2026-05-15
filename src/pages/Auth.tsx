@@ -5,6 +5,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +17,7 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
       if (mode === "login") {
         await auth.login(email.trim(), password);
       } else {
-        await auth.register(email.trim(), password);
+        await auth.register(email.trim(), password, username.trim() || undefined);
       }
       onAuth();
     } catch (err) {
@@ -35,6 +36,19 @@ export default function AuthPage({ onAuth }: { onAuth: () => void }) {
         </p>
 
         <form onSubmit={submit} className="flex flex-col gap-4">
+          {mode === "register" && (
+            <div>
+              <label className="block text-sm text-zinc-400 mb-1">Name <span className="text-zinc-600">(optional)</span></label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                maxLength={40}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500"
+                placeholder="What should we call you?"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm text-zinc-400 mb-1">Email</label>
             <input
